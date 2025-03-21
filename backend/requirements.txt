@@ -1,0 +1,27 @@
+# FastAPI
+fastapi==0.103.1
+uvicorn==0.23.2
+pydantic==2.3.0
+email-validator==2.0.0
+
+# Database
+sqlalchemy==2.0.20
+psycopg2-binary==2.9.7
+alembic==1.12.0
+
+# Security
+python-jose==3.3.0
+passlib==1.7.4
+python-multipart==0.0.6
+bcrypt==4.0.1
+
+# CORS
+starlette==0.27.0
+
+# Testing
+pytest==7.4.1
+httpx==0.24.1
+
+# Development
+black==23.7.0
+isort==5.12.0
