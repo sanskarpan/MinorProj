@@ -1,0 +1,110 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+.venv/
+.python-version
+
+# macOS system files
+.DS_Store
+
+# VSCode and JetBrains IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment variables
+.env
+*.env
+
+# Logs and debugging
+logs/
+*.log
+nohup.out
+
+# Compiled Python files
+*.pyc
+*.pyo
+*.pyd
+
+# MyPy type checker
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pytest cache
+.pytest_cache/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+*.cover
+.cache
+nosetests.xml
+coverage.xml
+*.lcov
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints
+
+# SQLite database files
+*.sqlite3
+*.db
+*.sqlite
+*.db-journal
+
+# Migration files (if using Alembic or Django)
+migrations/
+alembic/
+
+# Generated API documentation
+docs/_build/
+
+# Docker files
+docker-compose.override.yml
+.dockerignore
+*.tar
+__pycache__/
+*.py[cod]
+
+# AWS, Google Cloud, and Azure credentials
+.aws/
+.gcloud/
+azure/
+
+# FastAPI specific
+instance/
+staticfiles/
+media/
+
+# Pipenv and poetry
+Pipfile
+Pipfile.lock
+poetry.lock
+
+# Local `.dev` files
+*.local
+
+# System-wide Python cache
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Local storage files
+storage/
+uploads/
+tmp/
+temp/
+
+# Node.js related (if used for frontend in the same repo)
+node_modules/
+
+# Terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
