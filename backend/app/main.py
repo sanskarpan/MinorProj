@@ -5,9 +5,14 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import engine, SessionLocal, Base
 from app.routes import auth, transactions, analytics
+from app.utils.environment import load_env_file, is_development
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+# Load environment variables from .env file
+load_env_file()
+
+# Create database tables if in development mode
+if is_development():
+    Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -45,8 +50,9 @@ def health_check():
     """
     Health check endpoint
     """
-    return {"status": "ok", "version": settings.PROJECT_VERSION}
+    return {"status": "ok", "version": settings.PROJECT_VERSION, "environment": settings.ENV}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=is_development())
+

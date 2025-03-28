@@ -4,23 +4,25 @@ from sqlalchemy.orm import sessionmaker
 
 from app.core.config import settings
 
-# Create PostgreSQL engine
-SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
+SQLALCHEMY_DATABASE_URL = settings.get_db_url()
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-)
+engine_args = {}
+if "neon.tech" in SQLALCHEMY_DATABASE_URL:
+    engine_args.update({
+        "pool_pre_ping": True,  # Check connection before using from pool
+        "pool_recycle": 300,    # Recycle connections every 5 minutes
+        "pool_size": 5,         # Maintain a pool of 5 connections
+        "max_overflow": 10      # Allow up to 10 overflow connections
+    })
 
-# Create session factory
+engine = create_engine(SQLALCHEMY_DATABASE_URL,**engine_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Create base class for models
 Base = declarative_base()
 
-# Get database session
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+    
