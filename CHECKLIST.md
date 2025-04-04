@@ -44,7 +44,7 @@
   - [x] Income vs expense comparison
 
 ### Environment & Infrastructure
-- [X] Set up Neon Postgres connection
+- [X] Set up Supabase Postgres connection
 - [X] Improve environment variable management
 - [ ] CI/CD pipeline setup
 - [ ] Deployment configuration

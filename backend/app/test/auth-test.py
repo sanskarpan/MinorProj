@@ -12,9 +12,9 @@ def test_auth(base_url="http://localhost:8000"):
     
     # Define test user data
     test_user = {
-        "name": "Tester",
-        "email": "test1@test.com",
-        "password": "tester1"
+        "name": "admin",
+        "email": "admin@test.com",
+        "password": "password"
     }
     
     # Step 1: Create a test user (signup)

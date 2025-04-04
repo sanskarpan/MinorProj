@@ -145,9 +145,70 @@ backend/
 ### Analytics
 - `GET /api/analytics` - Get financial analytics data
 
-## Screenshots
+## Architecture Diagram
 
-*(Add screenshots of your application here)*
+```mermaid
+graph TB
+    subgraph "Frontend"
+        UI[React UI Components]
+        SM[Zustand State Management]
+        VIZ[Data Visualization]
+        PWA["Progressive Web App (Future)"]
+    end
+
+    subgraph "Backend"
+        API[FastAPI Endpoints]
+        AUTH[Authentication Service]
+        TRANS[Transaction Service]
+        BUDGET[Budget Service]
+        AI["AI Insights Engine (Future)"]
+        NOTIFY["Notification Service (Future)"]
+    end
+
+    subgraph "Data Layer"
+        DB[(PostgreSQL Database)]
+        CACHE["Redis Cache (Future)"]
+        ML["ML Models (Future)"]
+    end
+
+    subgraph "Integrations"
+        BANK["Open Banking APIs (Future)"]
+        EMAIL["Email Parser (Future)"]
+        SMS["SMS Scanner (Future)"]
+        VOICE["Voice Assistant (Future)"]
+    end
+
+    UI <--> SM
+    SM <--> VIZ
+    SM <--> PWA
+    SM <--> API
+
+    API <--> AUTH
+    API <--> TRANS
+    API <--> BUDGET
+    API <--> AI
+    API <--> NOTIFY
+
+    AUTH <--> DB
+    TRANS <--> DB
+    BUDGET <--> DB
+    AI <--> DB
+    AI <--> ML
+    TRANS <--> CACHE
+    BUDGET <--> CACHE
+
+    BANK <--> TRANS
+    EMAIL <--> TRANS
+    SMS <--> TRANS
+    VOICE <--> UI
+```
+
+
+## Data Flow Diagram
+
+```mermaid
+
+```
 
 ## Future Enhancements
 

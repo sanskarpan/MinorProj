@@ -1,3 +1,7 @@
+
+
+// State Management (Zustand Store)
+
 import { create } from 'zustand';
 import axios from 'axios';
 import { API_URL } from '../utils/api';
@@ -144,3 +148,5 @@ const useTransactionStore = create((set, get) => ({
 }));
 
 export default useTransactionStore;
+
+

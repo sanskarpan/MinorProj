@@ -42,6 +42,7 @@ def signup(user_in: UserCreate, db: Session = Depends(get_db)):
     
     return user
 
+#Authentication Flow
 @router.post("/login", response_model=Token)
 def login(user_in: UserLogin, db: Session = Depends(get_db)):
     """
