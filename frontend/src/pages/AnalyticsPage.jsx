@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
-  Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis
+  Bar, BarChart, CartesianGrid, Cell, ComposedChart, Area, LabelList, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis
 } from 'recharts';
 import useTransactionStore from '@/store/transactionStore';
 import { formatCurrency, formatPercentage } from '@/utils/formatters'; // Added formatPercentage
@@ -121,7 +121,8 @@ const AnalyticsPage = () => {
 
     // Add fill colors for category chart
     const categoryChart = categories.map((item, index) => ({
-      ...item,
+      name: item.name,
+      value: item.amount,
       fill: chartColors.COLORS[index % chartColors.COLORS.length],
     }));
 
@@ -213,16 +214,22 @@ const AnalyticsPage = () => {
             {isLoadingAnalytics ? ( <Skeleton className="h-full w-full rounded-md" /> )
              : hasMonthlyData ? (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlySummary} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}> {/* Adjust left margin */}
+                <ComposedChart data={monthlySummary} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="colorNet" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={chartColors.netColor} stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor={chartColors.netColor} stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridColor} />
                   <XAxis dataKey="month" stroke={chartColors.textColor} fontSize={10} tickLine={false} axisLine={false} dy={5}/>
                   <YAxis stroke={chartColors.textColor} fontSize={10} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value / 1000}k`} dx={-5} />
                   <Tooltip content={<CustomTooltip colors={chartColors}/>} cursor={{ fill: chartColors.accentColor, fillOpacity: 0.1 }} />
                   <Legend iconSize={10} wrapperStyle={{fontSize: "12px", paddingTop: "10px"}} verticalAlign="top" align="right"/>
-                  <Line type="monotone" dataKey="income" stroke={chartColors.incomeColor} activeDot={{ r: 4 }} name="Income" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="expense" stroke={chartColors.expenseColor} activeDot={{ r: 4 }} name="Expense" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="net" stroke={chartColors.netColor} activeDot={{ r: 4 }} name="Net" strokeWidth={2} dot={false} />
-                </LineChart>
+                  <Bar dataKey="income" name="Income" barSize={20} fill={chartColors.incomeColor} />
+                  <Bar dataKey="expense" name="Expense" barSize={20} fill={chartColors.expenseColor} />
+                  <Area type="monotone" dataKey="net" name="Net" stroke={chartColors.netColor} fill="url(#colorNet)" strokeWidth={2} />
+                </ComposedChart>
               </ResponsiveContainer>
             ) : ( <div className="flex items-center justify-center h-full text-muted-foreground">No monthly data available.</div> )}
           </CardContent>
@@ -248,11 +255,49 @@ const AnalyticsPage = () => {
                     >
                        {incomeVsExpenseForChart.map((entry, index) => ( <Cell key={`cell-${index}`} fill={entry.fill} /> ))}
                     </Pie>
+                    {hasIncomeVsExpenseData && (
+                      <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-lg font-bold" fill={chartColors.textColor}>
+                        {formatCurrency(kpiData.netTotal)}
+                      </text>
+                    )}
                     <Tooltip content={<CustomTooltip colors={chartColors} />} />
                     <Legend iconSize={10} wrapperStyle={{fontSize: "12px"}} />
                   </PieChart>
                </ResponsiveContainer>
             ) : ( <div className="flex items-center justify-center h-full text-muted-foreground">No income/expense data.</div> )}
+          </CardContent>
+        </Card>
+
+        {/* Savings Rate Gauge */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Savings Rate</CardTitle>
+            <CardDescription>Net / Income for the period.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[300px] w-full flex items-center justify-center">
+            {isLoadingAnalytics ? (
+              <Skeleton className="h-48 w-48 rounded-full" />
+            ) : kpiData?.savingsRate !== null ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={[{ name: 'savings', value: kpiData.savingsRate }, { name: 'remainder', value: 1 - kpiData.savingsRate }]}
+                    startAngle={180} endAngle={0}
+                    innerRadius={60} outerRadius={100}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    <Cell key="cell-savings" fill={chartColors.incomeColor} />
+                    <Cell key="cell-remainder" fill={chartColors.gridColor} />
+                  </Pie>
+                  <text x="50%" y="60%" textAnchor="middle" dominantBaseline="middle" className="text-lg font-bold" fill={chartColors.textColor}>
+                    {formatPercentage(kpiData.savingsRate, 1)}
+                  </text>
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="text-muted-foreground">No data</div>
+            )}
           </CardContent>
         </Card>
 
@@ -274,6 +319,7 @@ const AnalyticsPage = () => {
                   <Tooltip content={<CustomTooltip colors={chartColors} />} cursor={{ fill: chartColors.accentColor, fillOpacity: 0.1 }}/>
                   <Bar dataKey="value" name="Amount" radius={[0, 4, 4, 0]} barSize={12}>
                      {categoryBreakdownForChart.map((entry, index) => ( <Cell key={`cell-${index}`} fill={entry.fill} /> ))}
+                     <LabelList dataKey="value" position="right" formatter={(val) => formatCurrency(val)} fill={chartColors.textColor} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
