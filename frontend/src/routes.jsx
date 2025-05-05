@@ -4,41 +4,44 @@ import useAuthStore from './store/authStore';
 
 // Layout
 import MainLayout from './components/Navigation/MainLayout';
+import { Loader2 } from 'lucide-react'; // Use Loader icon
 
-// Pages
-const Dashboard = lazy(() => import('./pages/DashboardPage'));
-const Transactions = lazy(() => import('./pages/TransactionPage'));
-const Analytics = lazy(() => import('./pages/AnalyticsPage'));
-const Login = lazy(() => import('./pages/LoginPage'));
-const Signup = lazy(() => import('./pages/SignupPage'));
-const NotFound = lazy(() => import('./pages/NotFoundPage'));
+// Pages - Ensure correct paths if using aliases
+const Dashboard = lazy(() => import('@/pages/DashboardPage'));
+const Transactions = lazy(() => import('@/pages/TransactionPage'));
+const Analytics = lazy(() => import('@/pages/AnalyticsPage'));
+const Login = lazy(() => import('@/pages/LoginPage'));
+const Signup = lazy(() => import('@/pages/SignupPage'));
+const NotFound = lazy(() => import('@/pages/NotFoundPage'));
 
-// Loading component
+// Enhanced Loading component
 const Loading = () => (
-  <div className="flex h-screen w-full items-center justify-center">
-    <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
+  <div className="flex min-h-screen w-full items-center justify-center bg-background">
+    <Loader2 className="h-12 w-12 animate-spin text-primary" />
   </div>
 );
 
 // Auth guard component
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  
+
   if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+    // Store intended location for redirect after login
+    // const location = useLocation(); // You might need this if using React Router v6 features directly
+    return <Navigate to="/login" replace />; // Use replace to prevent back button issues
   }
-  
+
   return children;
 };
 
 // Guest guard component (for login/signup pages)
 const GuestRoute = ({ children }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  
+
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" />;
+    return <Navigate to="/dashboard" replace />;
   }
-  
+
   return children;
 };
 
@@ -52,32 +55,37 @@ const Router = () => {
           <MainLayout />
         </ProtectedRoute>
       ),
+      // Wrap all protected children in Suspense
       children: [
-        { path: '/', element: <Navigate to="/dashboard" /> },
-        { 
-          path: 'dashboard', 
+        { path: '/', element: <Navigate to="/dashboard" replace /> },
+        {
+          path: 'dashboard',
           element: (
             <Suspense fallback={<Loading />}>
               <Dashboard />
             </Suspense>
           )
         },
-        { 
-          path: 'transactions', 
+        {
+          path: 'transactions',
           element: (
             <Suspense fallback={<Loading />}>
               <Transactions />
             </Suspense>
           )
         },
-        { 
-          path: 'analytics', 
+        {
+          path: 'analytics',
           element: (
             <Suspense fallback={<Loading />}>
               <Analytics />
             </Suspense>
           )
         },
+         // Add placeholders for future routes
+         // { path: 'budgets', element: <Suspense fallback={<Loading />}><BudgetsPage /></Suspense> },
+         // { path: 'profile', element: <Suspense fallback={<Loading />}><ProfilePage /></Suspense> },
+         // { path: 'settings', element: <Suspense fallback={<Loading />}><SettingsPage /></Suspense> },
       ],
     },
     {
@@ -100,6 +108,7 @@ const Router = () => {
         </GuestRoute>
       ),
     },
+    // Separate layout for NotFound or keep it simple
     {
       path: '404',
       element: (

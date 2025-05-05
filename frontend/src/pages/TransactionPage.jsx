@@ -15,8 +15,8 @@ const TransactionPage = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold tracking-tight">Transactions</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Manage your income and expenses
         </p>
       </div>

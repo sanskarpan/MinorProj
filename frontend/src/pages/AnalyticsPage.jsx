@@ -1,289 +1,288 @@
-import { useEffect, useState } from 'react';
-import { 
-  BarChart, 
-  Bar, 
-  PieChart, 
-  Pie, 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer, 
-  Cell, 
-  CartesianGrid 
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import {
+  Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis
 } from 'recharts';
-import useTransactionStore from '../store/transactionStore';
-import { formatCurrency } from '../utils/formatters';
+import useTransactionStore from '@/store/transactionStore';
+import { formatCurrency, formatPercentage } from '@/utils/formatters'; // Added formatPercentage
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useTheme } from "@/components/ThemeProvider";
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
+import {
+    Scale, // Balance/Net Savings
+    TrendingUp, // Income / Positive Trend
+    TrendingDown, // Expense / Negative Trend
+    Tag, // Category
+    CalendarDays, // Timeframe
+    AlertCircle // Error
+} from "lucide-react";
 
-const AnalyticsPage = () => {
-  const { transactions, fetchTransactions } = useTransactionStore();
-  const [timeframe, setTimeframe] = useState('month'); // month, quarter, year
-  const [categoryData, setCategoryData] = useState([]);
-  const [monthlyData, setMonthlyData] = useState([]);
-  const [incomeVsExpense, setIncomeVsExpense] = useState([]);
+// Custom Hook for Chart Colors (optional, but cleans up component)
+const useChartColors = () => {
+    const { theme } = useTheme();
+    return useMemo(() => ({
+        COLORS: theme === 'dark'
+            ? ['#38bdf8', '#34d399', '#facc15', '#fb923c', '#a78bfa', '#60a5fa', '#fde047', '#93c5fd'] // Sky, Emerald, Amber, Orange, Violet, Blue, Yellow, Sky
+            : ['#0284c7', '#10b981', '#f59e0b', '#f97316', '#8b5cf6', '#3b82f6', '#eab308', '#60a5fa'], // Darker Sky, Emerald, Amber, Orange, Violet, Blue, Yellow, Blue
+        incomeColor: theme === 'dark' ? '#34d399' : '#10b981', // Emerald
+        expenseColor: theme === 'dark' ? '#fb923c' : '#f97316', // Orange
+        netColor: theme === 'dark' ? '#60a5fa' : '#3b82f6', // Blue
+        gridColor: 'hsl(var(--border))',
+        textColor: 'hsl(var(--muted-foreground))',
+        tooltipBg: 'hsl(var(--background))',
+        tooltipBorder: 'hsl(var(--border))',
+        accentColor: 'hsl(var(--accent))'
+    }), [theme]);
+};
 
-  useEffect(() => {
-    fetchTransactions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (transactions.length > 0) {
-      processCategoryData();
-      processMonthlyData();
-      processIncomeVsExpense();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transactions, timeframe]);
-
-  // Process data for category breakdown chart
-  const processCategoryData = () => {
-    const categoryMap = {};
-    const expenseTransactions = transactions.filter(t => t.type === 'expense');
-
-    // Sum transactions by category
-    expenseTransactions.forEach(transaction => {
-      const category = transaction.category;
-      if (!categoryMap[category]) {
-        categoryMap[category] = 0;
-      }
-      categoryMap[category] += transaction.amount;
-    });
-
-    // Convert to chart data format
-    const data = Object.keys(categoryMap).map(category => ({
-      name: category,
-      value: categoryMap[category],
-    }));
-
-    setCategoryData(data);
-  };
-
-  // Process data for monthly trend chart
-  const processMonthlyData = () => {
-    const now = new Date();
-    const monthsToShow = timeframe === 'month' ? 6 : timeframe === 'quarter' ? 12 : 24;
-    
-    // Generate last X months
-    const monthlyTotals = [];
-    for (let i = monthsToShow - 1; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthYear = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
-      
-      monthlyTotals.push({
-        name: monthYear,
-        income: 0,
-        expense: 0,
-        net: 0,
-        month: date.getMonth(),
-        year: date.getFullYear(),
-      });
-    }
-    
-    // Sum transactions by month
-    transactions.forEach(transaction => {
-      const transactionDate = new Date(transaction.date);
-      const transactionMonth = transactionDate.getMonth();
-      const transactionYear = transactionDate.getFullYear();
-      
-      const matchingMonth = monthlyTotals.find(
-        item => item.month === transactionMonth && item.year === transactionYear
-      );
-      
-      if (matchingMonth) {
-        if (transaction.type === 'income') {
-          matchingMonth.income += transaction.amount;
-        } else {
-          matchingMonth.expense += transaction.amount;
-        }
-        matchingMonth.net = matchingMonth.income - matchingMonth.expense;
-      }
-    });
-    
-    setMonthlyData(monthlyTotals);
-  };
-  
-  // Process income vs expense data
-  const processIncomeVsExpense = () => {
-    const totalIncome = transactions
-      .filter(t => t.type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0);
-      
-    const totalExpense = transactions
-      .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0);
-      
-    setIncomeVsExpense([
-      { name: 'Income', value: totalIncome },
-      { name: 'Expenses', value: totalExpense },
-    ]);
-  };
-  
-  // Colors for charts
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1'];
-  
-  // Custom tooltip for charts
-  const CustomTooltip = ({ active, payload, label }) => {
+// Custom Tooltip Component
+const CustomTooltip = ({ active, payload, label, colors }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
-          <p className="font-medium">{label}</p>
-          {payload.map((entry, index) => (
-            <p key={`item-${index}`} style={{ color: entry.color }}>
-              {entry.name}: {formatCurrency(entry.value)}
-            </p>
-          ))}
+        <div className="rounded-lg border text-xs shadow-sm" style={{ backgroundColor: colors.tooltipBg, borderColor: colors.tooltipBorder }}>
+          <div className="p-2 space-y-1.5">
+            <div className="font-semibold">{label}</div>
+            {payload.map((entry, index) => (
+               <div key={`item-${index}`} className="grid grid-cols-[auto,1fr] gap-x-2 items-center">
+                 <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: entry.color || entry.payload?.fill || '#8884d8' }} />
+                    <span style={{ color: colors.textColor }}>{entry.name}</span>
+                 </div>
+                 <span className="font-medium text-right">{entry.dataKey === 'percentage' ? formatPercentage(entry.value / 100, 1) : formatCurrency(entry.value)}</span>
+              </div>
+            ))}
+          </div>
         </div>
       );
     }
     return null;
-  };
-  
+};
+
+// Pie Chart Label Renderer
+const RADIAN = Math.PI / 180;
+const renderCustomizedPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name, colors }) => {
+    if (percent < 0.05) return null; // Don't render tiny labels
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.6; // Adjust position
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    return (
+      <text x={x} y={y} fill={colors.textColor} textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" className="text-[10px] font-medium">
+        {`${(percent * 100).toFixed(0)}%`}
+        {/* Optional: Add name back if space allows: {`${name} ${(percent * 100).toFixed(0)}%`} */}
+      </text>
+    );
+};
+
+
+const AnalyticsPage = () => {
+  // Memoized selectors to keep getSnapshot stable and avoid infinite loops
+  const selectFetchAnalyticsData = useCallback(state => state.fetchAnalyticsData, []);
+  const selectAnalyticsData     = useCallback(state => state.analyticsData, []);
+  const selectIsLoadingAnalytics= useCallback(state => state.isLoadingAnalytics, []);
+  const selectErrorAnalytics    = useCallback(state => state.errorAnalytics, []);
+
+  const fetchAnalyticsData = useTransactionStore(selectFetchAnalyticsData);
+  const analyticsData      = useTransactionStore(selectAnalyticsData);
+  const isLoadingAnalytics = useTransactionStore(selectIsLoadingAnalytics);
+  const errorAnalytics     = useTransactionStore(selectErrorAnalytics);
+
+  const chartColors = useChartColors(); // Use the custom hook for colors
+  const [timeframe, setTimeframe] = useState('month');
+
+  useEffect(() => {
+    fetchAnalyticsData(timeframe);
+  }, [timeframe, fetchAnalyticsData]);
+
+  // Memoized calculations for KPIs and chart data
+  const { kpiData, monthlySummary, incomeVsExpenseForChart, categoryBreakdownForChart } = useMemo(() => {
+    const safeData = analyticsData || {};
+    const monthly = safeData.monthly_summary || [];
+    const categories = safeData.category_breakdown || [];
+    const ivs = safeData.income_vs_expense || { income: 0, expense: 0, net: 0 };
+
+    // KPI Calculations
+    const totalIncome = ivs.income || 0;
+    const totalExpense = ivs.expense || 0;
+    const netTotal = ivs.net || 0;
+    const savingsRate = totalIncome > 0 ? (netTotal / totalIncome) : 0;
+    const avgMonthlyNet = monthly.length > 0 ? (monthly.reduce((sum, m) => sum + m.net, 0) / monthly.length) : 0;
+    const topCategory = categories.length > 0 ? categories.reduce((max, cat) => (cat.amount > max.amount ? cat : max), categories[0]) : null;
+
+    const kpi = { totalIncome, totalExpense, netTotal, savingsRate, avgMonthlyNet, topCategory };
+
+    // Chart Data Preparation
+    const incomeVsExpenseChart = [
+        { name: 'Income', value: ivs.income || 0, fill: chartColors.incomeColor },
+        { name: 'Expense', value: ivs.expense || 0, fill: chartColors.expenseColor },
+    ];
+
+    // Add fill colors for category chart
+    const categoryChart = categories.map((item, index) => ({
+      ...item,
+      fill: chartColors.COLORS[index % chartColors.COLORS.length],
+    }));
+
+    return { kpiData: kpi, monthlySummary: monthly, incomeVsExpenseForChart: incomeVsExpenseChart, categoryBreakdownForChart: categoryChart };
+  }, [analyticsData, chartColors]); // Depend on analyticsData and theme-derived colors
+
+  const hasData = !isLoadingAnalytics && analyticsData && Object.keys(analyticsData).length > 0;
+  const hasMonthlyData = hasData && monthlySummary.length > 0;
+  const hasIncomeVsExpenseData = hasData && (incomeVsExpenseForChart[0].value > 0 || incomeVsExpenseForChart[1].value > 0);
+  const hasCategoryData = hasData && categoryBreakdownForChart.length > 0;
+
+
+  // Helper to render KPI cards or skeletons
+  const renderKPICard = (title, value, formatFn, icon, description, isLoadingOverride = isLoadingAnalytics) => (
+     <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        {React.createElement(icon, { className: "h-4 w-4 text-muted-foreground" })}
+      </CardHeader>
+      <CardContent>
+        {isLoadingOverride ? (
+            <>
+                <Skeleton className="h-7 w-3/4 rounded-md" />
+                <Skeleton className="h-3 w-1/2 mt-2 rounded-md" />
+            </>
+        ) : value !== null && value !== undefined ? (
+            <>
+                <div className="text-2xl font-bold">{formatFn(value)}</div>
+                <p className="text-xs text-muted-foreground">{description}</p>
+            </>
+        ) : (
+             <p className="text-sm text-muted-foreground">No data</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Visualize your financial data
-        </p>
-      </div>
-      
-      {/* Time period selector */}
-      <div className="card p-4">
-        <div className="flex space-x-4">
-          <button
-            className={`px-3 py-2 rounded-md ${
-              timeframe === 'month' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-700'
-            }`}
-            onClick={() => setTimeframe('month')}
-          >
-            Last 6 Months
-          </button>
-          <button
-            className={`px-3 py-2 rounded-md ${
-              timeframe === 'quarter' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-700'
-            }`}
-            onClick={() => setTimeframe('quarter')}
-          >
-            Last 12 Months
-          </button>
-          <button
-            className={`px-3 py-2 rounded-md ${
-              timeframe === 'year' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-700'
-            }`}
-            onClick={() => setTimeframe('year')}
-          >
-            Last 24 Months
-          </button>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">Financial Analytics</h1>
+          <p className="text-muted-foreground">
+            Insights into your income, expenses, and spending habits.
+          </p>
+        </div>
+        <div className='flex items-center gap-2'>
+           <CalendarDays className='h-4 w-4 text-muted-foreground shrink-0'/>
+           <Select value={timeframe} onValueChange={setTimeframe} disabled={isLoadingAnalytics}>
+             <SelectTrigger className="w-full sm:w-[180px]">
+               <SelectValue placeholder="Select Timeframe" />
+             </SelectTrigger>
+             <SelectContent>
+               <SelectItem value="month">Last 6 Months</SelectItem>
+               <SelectItem value="quarter">Last 12 Months</SelectItem>
+               <SelectItem value="year">Last 24 Months</SelectItem>
+             </SelectContent>
+           </Select>
         </div>
       </div>
-      
-      {/* Charts */}
+
+      {/* Display Global Error */}
+      {errorAnalytics && (
+           <Alert variant="destructive">
+             <AlertCircle className="h-4 w-4" />
+             <AlertTitle>Error Loading Analytics Data</AlertTitle>
+             <AlertDescription>{errorAnalytics}</AlertDescription>
+           </Alert>
+       )}
+
+      {/* KPI Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {renderKPICard("Net Savings", kpiData?.netTotal, formatCurrency, Scale, `Total Income - Total Expense`)}
+        {renderKPICard("Savings Rate", kpiData?.savingsRate, (v) => formatPercentage(v, 1), TrendingUp, `(Net / Income) for period`)}
+        {renderKPICard("Avg. Monthly Net", kpiData?.avgMonthlyNet, formatCurrency, Scale, `Average Net over selected months`)}
+        {renderKPICard("Top Expense", kpiData?.topCategory?.name || '-', (v) => v, Tag, `Highest spending category`, isLoadingAnalytics || !kpiData?.topCategory)}
+      </div>
+
+      {/* Charts Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Monthly Trend */}
-        <div className="card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4 px-4 pt-4">Monthly Trend</h3>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={monthlyData}
-                margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Line type="monotone" dataKey="income" stroke="#82ca9d" name="Income" />
-                <Line type="monotone" dataKey="expense" stroke="#ff7043" name="Expense" />
-                <Line type="monotone" dataKey="net" stroke="#8884d8" name="Net" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        
-        {/* Income vs Expense */}
-        <div className="card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4 px-4 pt-4">Income vs Expense</h3>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={incomeVsExpense}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                  {incomeVsExpense.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={index === 0 ? '#82ca9d' : '#ff7043'} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        
-        {/* Expense Categories */}
-        <div className="card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4 px-4 pt-4">Expense by Category</h3>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={categoryData}
-                margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" name="Amount">
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        
-        {/* Category Breakdown */}
-        <div className="card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4 px-4 pt-4">Category Breakdown</h3>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        {/* Monthly Trend Chart */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Monthly Financial Trend</CardTitle>
+            <CardDescription>Income vs. Expense and Net balance over the selected period.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[350px] w-full pt-4 pl-0 pr-4"> {/* Adjusted padding */}
+            {isLoadingAnalytics ? ( <Skeleton className="h-full w-full rounded-md" /> )
+             : hasMonthlyData ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={monthlySummary} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}> {/* Adjust left margin */}
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridColor} />
+                  <XAxis dataKey="month" stroke={chartColors.textColor} fontSize={10} tickLine={false} axisLine={false} dy={5}/>
+                  <YAxis stroke={chartColors.textColor} fontSize={10} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value / 1000}k`} dx={-5} />
+                  <Tooltip content={<CustomTooltip colors={chartColors}/>} cursor={{ fill: chartColors.accentColor, fillOpacity: 0.1 }} />
+                  <Legend iconSize={10} wrapperStyle={{fontSize: "12px", paddingTop: "10px"}} verticalAlign="top" align="right"/>
+                  <Line type="monotone" dataKey="income" stroke={chartColors.incomeColor} activeDot={{ r: 4 }} name="Income" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="expense" stroke={chartColors.expenseColor} activeDot={{ r: 4 }} name="Expense" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="net" stroke={chartColors.netColor} activeDot={{ r: 4 }} name="Net" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : ( <div className="flex items-center justify-center h-full text-muted-foreground">No monthly data available.</div> )}
+          </CardContent>
+        </Card>
+
+        {/* Income vs Expense Donut Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Income vs. Expense</CardTitle>
+            <CardDescription>Overall financial flow for the period.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[300px] w-full flex items-center justify-center">
+            {isLoadingAnalytics ? ( <Skeleton className="h-48 w-48 rounded-full" /> )
+             : hasIncomeVsExpenseData ? (
+               <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={incomeVsExpenseForChart} cx="50%" cy="50%"
+                      labelLine={false} label={(props) => renderCustomizedPieLabel({...props, colors: chartColors})}
+                      outerRadius={100} innerRadius={60} // Donut
+                      fill="#8884d8" dataKey="value"
+                      stroke={chartColors.tooltipBg} strokeWidth={3} // Background color border
+                    >
+                       {incomeVsExpenseForChart.map((entry, index) => ( <Cell key={`cell-${index}`} fill={entry.fill} /> ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip colors={chartColors} />} />
+                    <Legend iconSize={10} wrapperStyle={{fontSize: "12px"}} />
+                  </PieChart>
+               </ResponsiveContainer>
+            ) : ( <div className="flex items-center justify-center h-full text-muted-foreground">No income/expense data.</div> )}
+          </CardContent>
+        </Card>
+
+        {/* Expense Categories Bar Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Expense Breakdown</CardTitle>
+             <CardDescription>Spending distribution by category.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[300px] w-full pt-4 pl-0 pr-4"> {/* Adjust padding */}
+             {isLoadingAnalytics ? ( <Skeleton className="h-full w-full rounded-md" /> )
+              : hasCategoryData ? (
+               <ResponsiveContainer width="100%" height="100%">
+                 {/* Use vertical layout if labels are long, horizontal otherwise */}
+                <BarChart data={categoryBreakdownForChart} layout="vertical" margin={{ top: 5, right: 10, left: 5, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartColors.gridColor} />
+                  <XAxis type="number" stroke={chartColors.textColor} fontSize={10} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
+                  <YAxis type="category" dataKey="name" stroke={chartColors.textColor} fontSize={10} tickLine={false} axisLine={false} width={80} interval={0} dx={-5}/>
+                  <Tooltip content={<CustomTooltip colors={chartColors} />} cursor={{ fill: chartColors.accentColor, fillOpacity: 0.1 }}/>
+                  <Bar dataKey="value" name="Amount" radius={[0, 4, 4, 0]} barSize={12}>
+                     {categoryBreakdownForChart.map((entry, index) => ( <Cell key={`cell-${index}`} fill={entry.fill} /> ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : ( <div className="flex items-center justify-center h-full text-muted-foreground">No expense category data.</div> )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
-
 };
+
 export default AnalyticsPage;

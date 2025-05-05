@@ -1,32 +1,22 @@
 import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button'; // Use ShadCN button
+import { Home, Frown } from 'lucide-react'; // Icons
 
 const NotFoundPage = () => {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4 text-center">
-      <h1 className="text-6xl font-bold text-primary-600">404</h1>
-      <h2 className="mt-2 text-2xl font-semibold text-gray-800">Page not found</h2>
-      <p className="mt-4 text-gray-600">
-        Sorry, we couldn't find the page you're looking for.
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 text-center">
+      <Frown className="h-24 w-24 text-destructive mb-6" /> {/* Icon for error */}
+      <h1 className="text-6xl font-bold text-primary">404</h1>
+      <h2 className="mt-4 text-3xl font-semibold tracking-tight">Page Not Found</h2>
+      <p className="mt-2 text-muted-foreground">
+        Oops! The page you are looking for does not exist or has been moved.
       </p>
-      <Link
-        to="/"
-        className="mt-6 inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-      >
-        <svg
-          className="-ml-1 mr-2 h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-          />
-        </svg>
-        Back to Dashboard
-      </Link>
+      <Button asChild className="mt-8">
+        <Link to="/">
+          <Home className="mr-2 h-4 w-4" />
+          Back to Dashboard
+        </Link>
+      </Button>
     </div>
   );
 };

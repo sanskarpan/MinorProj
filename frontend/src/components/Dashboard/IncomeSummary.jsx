@@ -1,25 +1,25 @@
-import { formatCurrency } from '../../utils/formatters';
+
+import { formatCurrency } from '@/utils/formatters';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TrendingUp } from "lucide-react";
 
 const IncomeSummary = ({ totalIncome }) => {
   return (
-    <div className="card border-l-4 border-green-500">
-      <div className="flex items-center">
-        <div className="p-3 rounded-full bg-green-100 mr-4">
-          <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 11l5-5m0 0l5 5m-5-5v12"
-            />
-          </svg>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">Total Income</CardTitle>
+        <TrendingUp className="h-4 w-4 text-success-500" /> {/* Use success color */}
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold text-success-600 dark:text-success-400">
+          {formatCurrency(totalIncome)}
         </div>
-        <div>
-          <p className="text-sm font-medium text-gray-600">Total Income</p>
-          <p className="text-2xl font-semibold text-green-600">{formatCurrency(totalIncome)}</p>
-        </div>
-      </div>
-    </div>
+         {/* Optional: Add comparison to previous period later */}
+        <p className="text-xs text-muted-foreground mt-1">
+          All recorded income
+        </p>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -1,20 +1,34 @@
-import { useState } from 'react';
-import useTransactionStore from '../../store/transactionStore';
+import { useState,useEffect} from 'react';
+import useTransactionStore from '@/store/transactionStore';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"; // For Date Picker
+import { Calendar } from "@/components/ui/calendar"; // For Date Picker
+import { cn } from "@/lib/utils";
+import { format } from "date-fns"; // Date formatting
+import { AlertCircle, CalendarIcon, Loader2 } from "lucide-react";
 
 const TransactionEntry = ({ onSuccess }) => {
   const { addTransaction, isLoading, error, clearError } = useTransactionStore();
-  
+  const initialDate = new Date(); // Use Date object for calendar
+
   const [formData, setFormData] = useState({
     description: '',
     amount: '',
-    date: new Date().toISOString().slice(0, 10),
-    category: 'other',
+    date: initialDate, // Store as Date object
+    category: '', // Default to empty, force selection
     type: 'expense',
     notes: '',
   });
-  
-  // Transaction categories
-  const categories = [
+
+  // Combined categories, adjust as needed
+  const expenseCategories = [
     { value: 'food', label: 'Food & Dining' },
     { value: 'transport', label: 'Transportation' },
     { value: 'entertainment', label: 'Entertainment' },
@@ -23,248 +37,234 @@ const TransactionEntry = ({ onSuccess }) => {
     { value: 'health', label: 'Healthcare' },
     { value: 'education', label: 'Education' },
     { value: 'shopping', label: 'Shopping' },
-    { value: 'income', label: 'Income' },
-    { value: 'salary', label: 'Salary' },
-    { value: 'investment', label: 'Investment' },
-    { value: 'other', label: 'Other' },
+    { value: 'other_expense', label: 'Other Expense' }, // Differentiate other
   ];
-  
-  const handleChange = (e) => {
-    const { name, value, type } = e.target;
-    clearError();
-    
-    // Handle number inputs
-    if (type === 'number') {
-      setFormData({
-        ...formData,
-        [name]: value === '' ? '' : parseFloat(value),
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
+  const incomeCategories = [
+    { value: 'salary', label: 'Salary' },
+    { value: 'freelance', label: 'Freelance' },
+    { value: 'investment', label: 'Investment' },
+    { value: 'gift', label: 'Gift' },
+    { value: 'other_income', label: 'Other Income' }, // Differentiate other
+  ];
+
+  const currentCategories = formData.type === 'income' ? incomeCategories : expenseCategories;
+
+  // Reset category if type changes and current category is invalid for new type
+  useEffect(() => {
+    const isValidCategory = currentCategories.some(c => c.value === formData.category);
+    if (formData.category && !isValidCategory) {
+      setFormData(prev => ({ ...prev, category: '' })); // Reset category
     }
-    
-    // Automatically set category to income-related categories when type is income
-    if (name === 'type' && value === 'income') {
-      if (!['income', 'salary', 'investment'].includes(formData.category)) {
-        setFormData(prev => ({
-          ...prev,
-          [name]: value,
-          category: 'income',
-        }));
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          [name]: value,
-        }));
-      }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.type, formData.category]);
+
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (error) clearError();
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAmountChange = (e) => {
+     if (error) clearError();
+     // Allow only numbers and one decimal point
+     const value = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+     setFormData(prev => ({ ...prev, amount: value }));
+  };
+
+  const handleRadioChange = (value) => {
+    if (error) clearError();
+    setFormData(prev => ({ ...prev, type: value }));
+  };
+
+  const handleSelectChange = (value) => {
+     if (error) clearError();
+     setFormData(prev => ({ ...prev, category: value }));
+  };
+
+  const handleDateChange = (date) => {
+    if (error) clearError();
+    if (date) {
+      setFormData(prev => ({ ...prev, date: date }));
     }
   };
-  
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validate
-    if (!formData.description || !formData.amount || !formData.date) {
+    if (error) clearError();
+
+    // Basic validation
+    if (!formData.description || !formData.amount || !formData.date || !formData.category || !formData.type) {
+      // Ideally show specific validation errors using react-hook-form later
       return;
     }
-    
-    const success = await addTransaction({
+
+    const submissionData = {
       ...formData,
       amount: parseFloat(formData.amount),
-    });
-    
+      // Format date to 'YYYY-MM-DD' string for API
+      date: format(formData.date, 'yyyy-MM-dd'),
+    };
+
+    const success = await addTransaction(submissionData);
+
     if (success) {
-      // Reset form
+      // Reset form to initial state
       setFormData({
         description: '',
         amount: '',
-        date: new Date().toISOString().slice(0, 10),
-        category: 'other',
+        date: initialDate,
+        category: '',
         type: 'expense',
         notes: '',
       });
-      
-      // Notify parent
       if (onSuccess) {
-        onSuccess();
+        onSuccess(); // Callback to refetch list, etc.
       }
     }
   };
-  
+
   return (
-    <div className="card">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Add New Transaction</h3>
-      
-      <form onSubmit={handleSubmit}>
-        {error && (
-          <div className="rounded-md bg-red-50 p-4 mb-4">
-            <div className="flex">
-              <div className="text-sm text-red-700">{error}</div>
-            </div>
-          </div>
-        )}
-        
-        <div className="space-y-4">
+    <Card>
+      <CardHeader>
+        <CardTitle>Add Transaction</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
           {/* Transaction Type */}
-          <div className="grid grid-cols-2 gap-4">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="type"
-                value="expense"
-                checked={formData.type === 'expense'}
-                onChange={handleChange}
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-              />
-              <span className="ml-2 text-gray-700">Expense</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="type"
-                value="income"
-                checked={formData.type === 'income'}
-                onChange={handleChange}
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-              />
-              <span className="ml-2 text-gray-700">Income</span>
-            </label>
-          </div>
-          
+          <RadioGroup
+            name="type"
+            value={formData.type}
+            onValueChange={handleRadioChange}
+            className="grid grid-cols-2 gap-4"
+            disabled={isLoading}
+          >
+            <Label className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer [&:has([data-state=checked])]:border-primary">
+              <RadioGroupItem value="expense" id="expense" />
+              <span>Expense</span>
+            </Label>
+            <Label className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer [&:has([data-state=checked])]:border-primary">
+              <RadioGroupItem value="income" id="income" />
+              <span>Income</span>
+            </Label>
+          </RadioGroup>
+
           {/* Description */}
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
-            <input
-              type="text"
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Input
               id="description"
               name="description"
+              placeholder="e.g., Coffee, Paycheck"
               required
               value={formData.description}
-              onChange={handleChange}
-              className="input-field mt-1"
-              placeholder="e.g., Grocery shopping"
+              onChange={handleInputChange}
+              disabled={isLoading}
             />
           </div>
-          
+
           {/* Amount */}
-          <div>
-            <label htmlFor="amount" className="block text-sm font-medium text-gray-700">Amount</label>
-            <div className="mt-1 relative rounded-md shadow-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-gray-500 sm:text-sm">$</span>
-              </div>
-              <input
-                type="number"
-                id="amount"
-                name="amount"
-                required
-                min="0.01"
-                step="0.01"
-                value={formData.amount}
-                onChange={handleChange}
-                className="input-field pl-7"
-                placeholder="0.00"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="amount">Amount</Label>
+            {/* Consider using Input with type="number" and step="0.01", but custom handling offers more control */}
+             <div className="relative">
+                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+                <Input
+                  id="amount"
+                  name="amount"
+                  placeholder="0.00"
+                  required
+                  value={formData.amount}
+                  onChange={handleAmountChange}
+                  className="pl-7" // Padding left for the '$' sign
+                  disabled={isLoading}
+                />
+             </div>
           </div>
-          
+
           {/* Date */}
-          <div>
-            <label htmlFor="date" className="block text-sm font-medium text-gray-700">Date</label>
-            <input
-              type="date"
-              id="date"
-              name="date"
-              required
-              value={formData.date}
-              onChange={handleChange}
-              className="input-field mt-1"
-            />
+          <div className="space-y-2">
+             <Label htmlFor="date">Date</Label>
+             <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !formData.date && "text-muted-foreground"
+                    )}
+                    disabled={isLoading}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {formData.date ? format(formData.date, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={formData.date}
+                    onSelect={handleDateChange}
+                    initialFocus
+                    disabled={isLoading}
+                  />
+                </PopoverContent>
+             </Popover>
           </div>
-          
+
           {/* Category */}
-          <div>
-            <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
-            <select
-              id="category"
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <Select
               name="category"
               value={formData.category}
-              onChange={handleChange}
-              className="input-field mt-1"
+              onValueChange={handleSelectChange}
+              required
+              disabled={isLoading}
             >
-              {formData.type === 'income' ? (
-                // Show only income-related categories
-                categories
-                  .filter(c => ['income', 'salary', 'investment'].includes(c.value))
-                  .map(category => (
-                    <option key={category.value} value={category.value}>
-                      {category.label}
-                    </option>
-                  ))
-              ) : (
-                // Show all except income-related categories
-                categories
-                  .filter(c => !['income', 'salary', 'investment'].includes(c.value))
-                  .map(category => (
-                    <option key={category.value} value={category.value}>
-                      {category.label}
-                    </option>
-                  ))
-              )}
-            </select>
+              <SelectTrigger id="category">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {currentCategories.map(category => (
+                  <SelectItem key={category.value} value={category.value}>
+                    {category.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          
+
           {/* Notes */}
-          <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes (Optional)</label>
-            <textarea
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Textarea
               id="notes"
               name="notes"
-              rows="3"
+              placeholder="Add any extra details..."
+              rows={3}
               value={formData.notes}
-              onChange={handleChange}
-              className="input-field mt-1"
-              placeholder="Add any additional details..."
-            ></textarea>
+              onChange={handleInputChange}
+              disabled={isLoading}
+            />
           </div>
-        </div>
-        
-        {/* Submit Button */}
-        <div className="mt-6">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="btn btn-primary w-full flex justify-center"
-          >
-            {isLoading ? (
-              <>
-                <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Processing...
-              </>
-            ) : (
-              'Add Transaction'
-            )}
-          </button>
-        </div>
-      </form>
-    </div>
+
+          {/* Submit Button */}
+          <Button type="submit" disabled={isLoading} className="w-full">
+            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Add Transaction
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 
