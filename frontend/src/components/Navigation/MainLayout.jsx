@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
-import { cn } from "@/lib/utils"; // Import cn utility
+import { cn } from "@/lib/utils"; 
 
 const MainLayout = () => {
-  // Keep mobile logic, but sidebar width handled by Tailwind/ShadCN classes
+  // mobile logic, but sidebar width handled by Tailwind/ShadCN classes
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -13,7 +13,6 @@ const MainLayout = () => {
     const checkIfMobile = () => {
       const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
-      // Sidebar open state depends on desktop/mobile
       setIsSidebarOpen(!mobile);
     };
     checkIfMobile();
@@ -40,8 +39,7 @@ const MainLayout = () => {
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 lg:p-8 bg-muted/40">
-           {/* Add some padding and subtle background */}
-          <div className="mx-auto max-w-7xl"> {/* Optional: Max width container */}
+          <div className="mx-auto max-w-7xl"> 
             <Outlet />
           </div>
         </main>

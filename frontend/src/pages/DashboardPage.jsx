@@ -1,4 +1,3 @@
-// frontend/src/pages/DashboardPage.jsx
 import { useEffect } from 'react';
 import useTransactionStore from '@/store/transactionStore';
 import useAuthStore from '@/store/authStore';
@@ -6,8 +5,6 @@ import BudgetOverview from '@/components/Dashboard/BudgetOverview';
 import ExpenseSummary from '@/components/Dashboard/ExpenseSummary';
 import IncomeSummary from '@/components/Dashboard/IncomeSummary';
 import RecentTransactions from '@/components/Dashboard/RecentTransactions';
-// Import ShadCN layout if needed, e.g., for grid
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const DashboardPage = () => {
   const { user } = useAuthStore();
@@ -15,8 +12,7 @@ const DashboardPage = () => {
 
   useEffect(() => {
     fetchTransactions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Fetch on mount
+  }, []);
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -53,15 +49,9 @@ const DashboardPage = () => {
            />
          </div>
           <div className="lg:col-span-3"> {/* Placeholder for a chart */}
-            {/* Example: Add a small summary chart here later */}
-          {/* <Card>
-            <CardHeader><CardTitle>Spending Overview</CardTitle></CardHeader>
-            <CardContent className="h-[300px]"> Chart Component </CardContent>
-          </Card> */}
           </div>
        </div>
 
-       {/* Maybe another row for Budgets or Goals later */}
 
     </div>
   );

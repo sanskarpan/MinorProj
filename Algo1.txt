@@ -1,0 +1,29 @@
+Algorithm: User Login
+
+Input: User's Email (email), User's Plaintext Password (password)
+Output: Authentication Token (JWT) and User Information, OR Error Message
+
+1. START
+2. Frontend: User submits login form with email and password.
+3. Frontend: Send POST request to Backend API endpoint `/auth/login` with email and password in the request body.
+4. Backend: Receive request.
+5. Backend: Query Database: Find user record where `email` matches input email.
+6. Backend: IF no user found THEN
+7.     Return HTTP 401 Unauthorized error ("Incorrect email or password").
+8. Backend: ELSE (user found)
+9.     Backend: Retrieve stored `hashed_password` for the found user.
+10.    Backend: Verify input `password` against `hashed_password` using bcrypt comparison function.
+11.    Backend: IF password does NOT match THEN
+12.        Return HTTP 401 Unauthorized error ("Incorrect email or password").
+13.    Backend: ELSE (password matches)
+14.        Backend: Generate JWT: Create a payload containing user ID (`sub`) and expiration time (`exp`).
+15.        Backend: Sign the payload using the secret key and configured algorithm (e.g., HS256) to create the `access_token`.
+16.        Backend: Retrieve user details (ID, name, email, created_at) excluding the password hash.
+17.        Backend: Return HTTP 200 OK response with `access_token`, `token_type` ("bearer"), and `user` information.
+18. Frontend: Receive successful response.
+19. Frontend: Store `access_token` and `user` information (e.g., in localStorage and Zustand store).
+20. Frontend: Set authenticated state to true.
+21. Frontend: Redirect user to the Dashboard page.
+22. Frontend: IF an error response was received THEN
+23.    Frontend: Display the error message to the user.
+24. END

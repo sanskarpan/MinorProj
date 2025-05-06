@@ -18,13 +18,13 @@ const SignupPage = () => {
     password: '',
     confirmPassword: '',
   });
-  const [formError, setFormError] = useState(''); // For frontend validation errors
+  const [formError, setFormError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    if (apiError) clearError(); // Clear API error on change
-    if (formError) setFormError(''); // Clear form error on change
+    if (apiError) clearError();
+    if (formError) setFormError('');
   };
 
   const validateForm = () => {
@@ -40,7 +40,6 @@ const SignupPage = () => {
       setFormError('Password must be at least 6 characters.');
       return false;
     }
-    // Add email format validation if needed (basic type="email" handles some)
     return true;
   };
 
@@ -57,13 +56,11 @@ const SignupPage = () => {
     const success = await signup(name, email, password);
 
     if (success) {
-      // Redirect to login with a success message
       navigate('/login', {
         replace: true,
         state: { message: 'Account created successfully! Please sign in.' }
       });
     }
-    // API error is handled by the useAuthStore and displayed below
   };
 
   const displayError = apiError || formError;

@@ -8,7 +8,6 @@ const TransactionPage = () => {
 
   useEffect(() => {
     fetchTransactions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

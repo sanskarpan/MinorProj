@@ -1,0 +1,35 @@
+Algorithm: Calculate Budget Progress for a Given Month/Year
+
+Input: User ID (user_id), Month (target_month), Year (target_year)
+Output: List of Budgets for the period, each augmented with spent amount, remaining amount, and percentage spent.
+
+1. START
+2. Backend: Receive request for budget progress (e.g., GET `/budgets/progress?month=...&year=...`).
+3. Backend: Query Database (Budgets Table): Find all `Budget` records where `user_id` matches, `month` equals `target_month`, and 
+`year` equals `target_year`. Store these as `user_budgets`.
+4. Backend: Initialize `budget_progress_list` as an empty list.
+5. Backend: IF `user_budgets` is empty THEN
+6.     Return `budget_progress_list` (empty).
+7. Backend: ELSE
+8.     Backend: Query Database (Transactions Table):
+9.        SELECT `category`, SUM(`amount`) AS `total_spent`
+10.       FROM `transactions`
+11.       WHERE `user_id` = `user_id`
+12.         AND `type` = 'expense'
+13.         AND EXTRACT(month FROM `date`) = `target_month`
+14.         AND EXTRACT(year FROM `date`) = `target_year`
+15.       GROUP BY `category`.
+16.    Backend: Store results in an `expenses_by_category` map (e.g., {'Food': 250.75, 'Transport': 80.00}).
+17.    Backend: FOR EACH `budget` in `user_budgets`:
+18.       Backend: Get `budget_category` from `budget`.
+19.       Backend: Get `budgeted_amount` from `budget` (convert to Decimal).
+20.       Backend: Get `spent_amount` from `expenses_by_category` map using `budget_category` (default to 0 if not found, convert to Decimal).
+21.       Backend: Calculate `remaining_amount` = `budgeted_amount` - `spent_amount`.
+22.       Backend: IF `budgeted_amount` > 0 THEN
+23.          Backend: Calculate `percentage_spent` = (`spent_amount` / `budgeted_amount`) * 100.
+24.       Backend: ELSE
+25.          Backend: Set `percentage_spent` = 0.
+26.       Backend: Create `progress_record` containing all fields from `budget` plus `spent_amount`, `remaining_amount`, `percentage_spent` (rounded).
+27.       Backend: Add `progress_record` to `budget_progress_list`.
+28.    Backend: Return `budget_progress_list`.
+29. END

@@ -19,7 +19,6 @@ import {
     AlertCircle // Error
 } from "lucide-react";
 
-// Custom Hook for Chart Colors (optional, but cleans up component)
 const useChartColors = () => {
     const { theme } = useTheme();
     return useMemo(() => ({
@@ -71,7 +70,6 @@ const renderCustomizedPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, 
     return (
       <text x={x} y={y} fill={colors.textColor} textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" className="text-[10px] font-medium">
         {`${(percent * 100).toFixed(0)}%`}
-        {/* Optional: Add name back if space allows: {`${name} ${(percent * 100).toFixed(0)}%`} */}
       </text>
     );
 };
