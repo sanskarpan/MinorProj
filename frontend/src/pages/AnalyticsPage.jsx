@@ -317,7 +317,7 @@ const AnalyticsPage = () => {
                   <Tooltip content={<CustomTooltip colors={chartColors} />} cursor={{ fill: chartColors.accentColor, fillOpacity: 0.1 }}/>
                   <Bar dataKey="value" name="Amount" radius={[0, 4, 4, 0]} barSize={12}>
                      {categoryBreakdownForChart.map((entry, index) => ( <Cell key={`cell-${index}`} fill={entry.fill} /> ))}
-                     <LabelList dataKey="value" position="right" formatter={(val) => formatCurrency(val)} fill={chartColors.textColor} />
+                     <LabelList dataKey="value" position="top" formatter={(val) => formatCurrency(val)} fill={chartColors.textColor} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>

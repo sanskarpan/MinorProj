@@ -32,7 +32,7 @@ const Sidebar = ({ isOpen, isMobile, onClose }) => {
         </NavLink>
         {isMobile && (
           <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-5 w-5" />
+            {/* <X className="h-5 w-5" /> */}
           </Button>
         )}
       </div>
