@@ -70,6 +70,29 @@ const useAuthStore = create((set) => ({
     });
   },
 
+  updateUserProfile: async (userData) => {
+    set({ isLoading: true, error: null });
+    try {
+      // Assuming userData contains { name: "New Name" }
+      const response = await api.put(`/auth/me`, userData); 
+      const updatedUser = response.data;
+      
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      set({
+        user: updatedUser,
+        isLoading: false,
+      });
+      return { success: true, user: updatedUser };
+    } catch (error) {
+      console.error("Update User Profile Error:", error);
+      set({
+        error: error.response?.data?.detail || 'Failed to update profile',
+        isLoading: false,
+      });
+      return { success: false, error: error.response?.data?.detail || 'Failed to update profile' };
+    }
+  },
+
   clearError: () => set({ error: null }),
 }));
 

@@ -1,6 +1,6 @@
 from typing import Optional
 from uuid import UUID
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, EmailStr, field_validator
 from datetime import datetime
 
 # Shared properties
@@ -12,7 +12,8 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     
-    @validator('password')
+    @field_validator('password')
+    @classmethod
     def password_min_length(cls, v):
         if len(v) < 6:
             raise ValueError('Password must be at least 6 characters')
@@ -30,7 +31,7 @@ class UserResponse(UserBase):
     created_at: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Properties properties stored in DB
 class UserInDB(UserResponse):

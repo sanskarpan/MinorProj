@@ -13,7 +13,9 @@ const Analytics = lazy(() => import('@/pages/AnalyticsPage'));
 const Login = lazy(() => import('@/pages/LoginPage'));
 const Signup = lazy(() => import('@/pages/SignupPage'));
 const NotFound = lazy(() => import('@/pages/NotFoundPage'));
-
+const Budgets = lazy(() => import('@/pages/BudgetPage')); 
+const Profile = lazy(() => import('@/pages/ProfilePage')); 
+const Settings = lazy(() => import('@/pages/SettingsPage')); 
 // Enhanced Loading component
 const Loading = () => (
   <div className="flex min-h-screen w-full items-center justify-center bg-background">
@@ -82,11 +84,9 @@ const Router = () => {
             </Suspense>
           )
         },
-         // Add placeholders for future routes
-         // { path: 'budgets', element: <Suspense fallback={<Loading />}><BudgetsPage /></Suspense> },
-         // { path: 'profile', element: <Suspense fallback={<Loading />}><ProfilePage /></Suspense> },
-         // { path: 'settings', element: <Suspense fallback={<Loading />}><SettingsPage /></Suspense> },
-      ],
+        { path: 'budgets', element: <Suspense fallback={<Loading />}><Budgets /></Suspense> },      
+        { path: 'profile', element: <Suspense fallback={<Loading />}><Profile /></Suspense> },     
+        { path: 'settings', element: <Suspense fallback={<Loading />}><Settings /></Suspense> },],
     },
     {
       path: 'login',

@@ -50,12 +50,12 @@
 - [ ] Deployment configuration
 
 ### Pages and Components
-- [ ] Profile Page
-- [ ] Settings Page
+- [X] Profile Page
+- [X] Settings Page
 
 ### Backend Enhancements
 - [ ] Budgeting functionality
-  - [ ] Budget models and APIs
+  -[X] Budget models and APIs
   - [ ] Budget alerts/notifications
 - [ ] AI-powered transaction categorization
   - [ ] NLP integration for transaction labeling

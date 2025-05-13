@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.database import engine, SessionLocal, Base
-from app.routes import auth, transactions, analytics
+from app.routes import auth, transactions, analytics, budgets
 from app.utils.environment import load_env_file, is_development
 
 # Load environment variables from .env file
@@ -44,6 +44,7 @@ def get_db():
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(transactions.router, prefix="/api/transactions", tags=["Transactions"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
+app.include_router(budgets.router, prefix="/api/budgets", tags=["Budgets"])
 
 @app.get("/api/health", tags=["Health"])
 def health_check():

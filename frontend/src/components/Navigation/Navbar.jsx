@@ -69,14 +69,18 @@ const Navbar = ({ onToggleSidebar }) => {
               <span>Dashboard</span>
             </Link>
           </DropdownMenuItem>
-           <DropdownMenuItem disabled> {/* Placeholder */}
-            <User className="mr-2 h-4 w-4" />
-            <span>Profile</span>
-           </DropdownMenuItem>
-          <DropdownMenuItem disabled> {/* Placeholder */}
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
-          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+        <Link to="/profile"> {/* <-- Update Link */}
+          <User className="mr-2 h-4 w-4" />
+          <span>Profile</span>
+        </Link>
+      </DropdownMenuItem>
+      <DropdownMenuItem asChild>
+        <Link to="/settings"> {/* <-- Update Link */}
+          <Settings className="mr-2 h-4 w-4" />
+          <span>Settings</span>
+        </Link>
+      </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={logout}>
             <LogOut className="mr-2 h-4 w-4" />

@@ -2,6 +2,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { Suspense } from 'react';
 import Router from './routes';
 import './index.css';
+import { Toaster } from "@/components/ui/toaster";
 
 // Loading component
 const Loading = () => (
@@ -15,6 +16,7 @@ function App() {
     <BrowserRouter>
       <Suspense fallback={<Loading />}>
         <Router />
+        <Toaster /> 
       </Suspense>
     </BrowserRouter>
   );

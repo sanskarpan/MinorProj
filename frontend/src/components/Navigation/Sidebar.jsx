@@ -9,6 +9,7 @@ import {
   ArrowLeftRight,
   BarChart3,
   Wallet, // Example new icon
+  Target,
   X // Close icon
 } from "lucide-react";
 
@@ -19,8 +20,7 @@ const Sidebar = ({ isOpen, isMobile, onClose }) => {
     { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { name: 'Transactions', icon: ArrowLeftRight, path: '/transactions' },
     { name: 'Analytics', icon: BarChart3, path: '/analytics' },
-    // Add more items later
-    // { name: 'Budgets', icon: Wallet, path: '/budgets' },
+    { name: 'Budgets', icon: Target, path: '/budgets' },
   ];
 
   const SidebarContent = () => (

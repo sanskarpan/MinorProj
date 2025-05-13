@@ -1,6 +1,6 @@
 from typing import Optional, List
 from uuid import UUID
-from pydantic import BaseModel, validator, confloat
+from pydantic import BaseModel, validator, confloat, field_validator
 from datetime import date, datetime
 
 from app.models.transaction import TransactionType
@@ -34,7 +34,7 @@ class TransactionResponse(TransactionBase):
     created_at: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Properties properties stored in DB
 class TransactionInDB(TransactionResponse):
@@ -48,7 +48,7 @@ class TransactionSummary(BaseModel):
     categories: List[dict]
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "total_income": 5000.0,
                 "total_expense": 3000.0,
@@ -68,7 +68,7 @@ class TransactionAnalytics(BaseModel):
     income_vs_expense: dict
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "monthly_summary": [
                     {"month": "Jan 2023", "income": 5000.0, "expense": 3000.0, "net": 2000.0},
