@@ -4,7 +4,7 @@ import BudgetEntry from '@/components/Budgets/BudgetEntry';
 import BudgetListItem from '@/components/Budgets/BudgetListItem';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, ListFilter, Sigma, PlusCircle } from "lucide-react"; // Added PlusCircle
+import { AlertCircle, ListFilter, Sigma, PlusCircle } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -16,10 +16,13 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogTrigger,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  // DialogTrigger, // Not needed as we manually control open state
 } from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency } from '@/utils/formatters'; // Assuming this is your global formatter
+import { Card, CardContent } from "@/components/ui/card"; // Removed CardHeader, CardTitle as they are not used here
+import { formatCurrency } from '@/utils/formatters';
 
 const BudgetPage = () => {
   const { budgets, fetchBudgets, isLoading, error, deleteBudget, clearError } = useBudgetStore();
@@ -40,7 +43,7 @@ const BudgetPage = () => {
 
   const handleDeleteBudget = async (id) => {
     await deleteBudget(id);
-    // Refetch or rely on store update is usually enough
+    // Optional: show toast on success/failure
   };
 
   const handleEditBudget = (budget) => {
@@ -49,7 +52,7 @@ const BudgetPage = () => {
   };
 
   const handleOpenCreateDialog = () => {
-    setBudgetToEdit(null); // Ensure we are in "create" mode
+    setBudgetToEdit(null);
     setIsEntryDialogOpen(true);
   };
 
@@ -61,15 +64,15 @@ const BudgetPage = () => {
   
   const handleDialogChange = (open) => {
     setIsEntryDialogOpen(open);
-    if (!open) { // When dialog closes
-      setBudgetToEdit(null); // Reset edit state
+    if (!open) {
+      setBudgetToEdit(null);
     }
   };
 
   const displayedBudgets = budgets;
 
-  const totalBudgetedAmount = displayedBudgets.reduce((sum, b) => sum + b.amount, 0);
-  const totalSpentAmount = displayedBudgets.reduce((sum, b) => sum + b.spent_amount, 0);
+  const totalBudgetedAmount = displayedBudgets.reduce((sum, b) => sum + (b.amount || 0), 0);
+  const totalSpentAmount = displayedBudgets.reduce((sum, b) => sum + (b.spent_amount || 0), 0);
 
   return (
     <div className="space-y-6">
@@ -80,24 +83,24 @@ const BudgetPage = () => {
             Plan and track your spending against your financial goals.
           </p>
         </div>
-        {/* Main "Create New Budget" button - This one triggers the dialog */}
         <Button onClick={handleOpenCreateDialog}>
            <PlusCircle className="mr-2 h-4 w-4" /> Create New Budget
         </Button>
       </div>
 
-      {/* Dialog for Budget Entry (Create/Edit) - Controlled by isEntryDialogOpen */}
       <Dialog open={isEntryDialogOpen} onOpenChange={handleDialogChange}>
-        {/* DialogTrigger is not strictly needed here as we control `open` state manually,
-            but if you wanted another trigger elsewhere, it could be used.
-            The primary button above now directly calls `handleOpenCreateDialog`.
-        */}
         <DialogContent className="sm:max-w-[480px]">
-           <BudgetEntry 
-              onSuccess={handleEntrySuccess} 
-              budgetToEdit={budgetToEdit}
-              onDoneEditing={handleDialogChange} // Pass this to allow BudgetEntry to close dialog
-           />
+          <DialogHeader>
+            <DialogTitle>{budgetToEdit ? 'Edit Budget' : 'Create New Budget'}</DialogTitle>
+            <DialogDescription>
+              {budgetToEdit ? 'Update the details for your budget.' : 'Fill in the details to create a new budget plan.'}
+            </DialogDescription>
+          </DialogHeader>
+          <BudgetEntry 
+            onSuccess={handleEntrySuccess} 
+            budgetToEdit={budgetToEdit}
+            onDoneEditing={() => handleDialogChange(false)} 
+          />
         </DialogContent>
       </Dialog>
 
@@ -109,11 +112,10 @@ const BudgetPage = () => {
         </Alert>
       )}
 
-      {/* Filters and Summary */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between p-4 border rounded-lg bg-card">
         <div className="flex gap-2 items-center flex-wrap">
            <ListFilter className="h-5 w-5 text-muted-foreground shrink-0"/>
-           <Select value={filterPeriod} onValueChange={setFilterPeriod}>
+           <Select value={filterPeriod} onValueChange={setFilterPeriod} disabled={isLoading}>
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Filter by period" />
             </SelectTrigger>
@@ -129,6 +131,7 @@ const BudgetPage = () => {
             onClick={() => setShowArchived(!showArchived)}
             size="sm"
             className="shrink-0"
+            disabled={isLoading}
           >
             {showArchived ? "Hide Past" : "Show Past"}
           </Button>
@@ -144,14 +147,14 @@ const BudgetPage = () => {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(3)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader>
-              <CardContent className="space-y-3">
+            <Card key={i} className="flex flex-col"> {/* Ensure Card is a flex container */}
+              <div className="p-6 pb-3"><Skeleton className="h-6 w-3/4" /></div> {/* Mimic CardHeader */}
+              <div className="p-6 pt-0 space-y-3 flex-grow"> {/* Mimic CardContent */}
                 <Skeleton className="h-8 w-1/2" />
                 <Skeleton className="h-3 w-full" />
                 <div className="flex justify-between"><Skeleton className="h-4 w-1/3" /><Skeleton className="h-4 w-1/3" /></div>
-              </CardContent>
-              <Skeleton className="h-10 m-6 mt-0" /> 
+              </div>
+              <div className="p-6 pt-0"><Skeleton className="h-10 w-full" /></div> {/* Mimic CardFooter */}
             </Card>
           ))}
         </div>
@@ -175,7 +178,6 @@ const BudgetPage = () => {
               {filterPeriod !== 'all' || showArchived ? "Try adjusting your filters or " : ""}
               create a new budget to get started.
             </p>
-            {/* This button now also uses handleOpenCreateDialog to trigger the main dialog */}
             <Button variant="outline" className="mt-4" onClick={handleOpenCreateDialog}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Create Budget
             </Button>
