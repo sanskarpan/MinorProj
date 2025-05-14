@@ -207,7 +207,69 @@ graph TB
 ## Data Flow Diagram
 
 ```mermaid
-
+  flowchart TD
+    %% User Interactions
+    User([User]) <-->|Authentication| Auth[Authentication Flow]
+    User <-->|Transactions| Trans[Transaction Flow]
+    User <-->|Budgeting| Budget[Budget Flow]
+    User <-->|Reports| Reports[Reporting Flow]
+    
+    %% Authentication Flow
+    Auth -->|Login Request| AuthUI[Authentication UI]
+    AuthUI -->|Validate| AuthAPI[Auth API]
+    AuthAPI -->|Check| UserDB[(User Database)]
+    AuthAPI -->|Generate| Token[JWT Token]
+    Token -->|Session| ClientState[Client State]
+    
+    %% Transaction Flow
+    Trans -->|Manual Entry| TransUI[Transaction UI]
+    Trans -->|View History| TransUI
+    TransUI -->|CRUD Operations| TransAPI[Transaction API]
+    
+    %% External Data Sources
+    BankAPI([Banking APIs]) -->|Import| DataImport[Data Import Service]
+    EmailSys([Email]) -->|Parse| DataImport
+    SMSSys([SMS]) -->|Extract| DataImport
+    DataImport -->|Process| TransAPI
+    
+    %% Transaction Processing
+    TransAPI -->|Store| TransDB[(Transaction Database)]
+    TransAPI -->|Categorize| Categories[Category Engine]
+    Categories -->|Update| TransDB
+    TransDB -->|Cache| RedisCache[(Redis Cache)]
+    
+    %% Budget Flow
+    Budget -->|Set Goals| BudgetUI[Budget UI]
+    BudgetUI -->|CRUD Operations| BudgetAPI[Budget API]
+    BudgetAPI -->|Store| BudgetDB[(Budget Database)]
+    TransDB -->|Analyze| BudgetAPI
+    BudgetAPI -->|Compare| Analysis[Budget Analysis]
+    
+    %% Reporting & Insights
+    Reports -->|Request| ReportUI[Reporting UI]
+    ReportUI -->|Generate| InsightAPI[Insights API]
+    TransDB -->|Historical Data| InsightAPI
+    BudgetDB -->|Goal Data| InsightAPI
+    InsightAPI -->|ML Processing| MLEngine[ML Models]
+    InsightAPI -->|Visualize| Visualization[Data Visualization]
+    Visualization -->|Display| ReportUI
+    
+    %% Notifications
+    Analysis -->|Trigger| NotifyService[Notification Service]
+    InsightAPI -->|Alerts| NotifyService
+    NotifyService -->|Push| User
+    
+    %% Style definitions
+    classDef userFlow fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef dataStore fill:#bbf,stroke:#33f,stroke-width:1px;
+    classDef apiService fill:#bfb,stroke:#393,stroke-width:1px;
+    classDef external fill:#fbb,stroke:#b33,stroke-width:1px;
+    
+    %% Apply styles
+    class Auth,Trans,Budget,Reports userFlow;
+    class UserDB,TransDB,BudgetDB,RedisCache dataStore;
+    class AuthAPI,TransAPI,BudgetAPI,InsightAPI apiService;
+    class BankAPI,EmailSys,SMSSys external;
 ```
 
 ## Future Enhancements
